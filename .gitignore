@@ -1,0 +1,10 @@
+*.pdf
+*.svg
+*.png
+*.jpg
+*.jpeg
+*~
+bbs
+octave-workspace
+kappa_pty_arbchart
+*.dat

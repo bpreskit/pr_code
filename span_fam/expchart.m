@@ -1,4 +1,4 @@
-% exptable.m
+% expchart.m
 % Author: Brian Preskitt (2018)
 %
 % This file produces the figure displayed in xxxx of my dissertation.
@@ -20,7 +20,7 @@ curkap = zeros(Na, 1);
 my_font = '/usr/share/fonts/truetype/dejavu/DejaVuSerifCondensed.ttf';
 figdir = '~/ucsd/dissertation/dissertation/sections/meas/figs/';
 %figdir = strcat(pwd, '/');
-figfil = strcat(figdir, sprintf('exptable%d.pdf', d));
+figfil = strcat(figdir, sprintf('expchart%d.pdf', d));
 
 % Indices used for for loop
 ii = 0;
@@ -49,51 +49,39 @@ for i = 1 : Ndel
   end
 end
 
-% % The rest of this is just setting up the image.
-% % Produce fundamental image
-% h = figure(1);
-% himage = imagesc(deltas, linspace(1.001, 2, 128), log(results));
-% %colorbar;
-% hgraph = get(himage).parent;
-% hold on;
-% axis([1.5  (Ndel + 1.5) 1 2]);
-% xlabel('Support size, \delta');
-% ylabel('Exponential constant, a');
-% %title('log \kappa over a and \delta');
+% The rest of this is just setting up the image.
+% Some plot constants
+lw = 12;
+% Produce fundamental image, plot the plots
+h = figure(1);
+hmink = semilogy(deltas, minkaps, 'k', 'linewidth', lw);
+hold on;
+hadel = semilogy(deltas, adelkaps, 'kx', 'linewidth', lw);
+hfk = zeros(Nfa, 1);
+hfk(1) = semilogy(deltas, fixkaps(:, 1), 'b', 'linewidth', lw);
+hfk(2) = semilogy(deltas, fixkaps(:, 2), 'r', 'linewidth', lw);
+hgraph = get(hmink).parent;
+grid(hgraph, "on");
+grid(hgraph, "minor", "off");
+xlabel('Support size, \delta');
+ylabel('Condition number, \kappa(a), log scale');
 
-% % Funny resize operation that helps position the legend correctly
-% wpos = get(hgraph).position;
-% set(hgraph, "position", [0 0 1 1]);
-% set(hgraph, "position", wpos);
+% Funny resize operation that helps position the legend correctly
+wpos = get(hgraph).position;
+set(hgraph, "position", [0 0 1 1]);
+set(hgraph, "position", wpos);
 
-% % Set the size of the figure, for printing.
-% scale = 1.2;
-% % W = 4 * scale;
-% % H = 3 * scale;
-% % W = 8.5;
-% % H = 11;
-% % set(h, 'PaperUnits', 'inches');
-% % set(h, 'PaperOrientation', 'landscape');
-% % set(h, 'PaperSize', [H, W])
-% % set(h, 'PaperPosition', [0,0,W,H]);
-% % set (gcf, "paperorientation", "landscape") 
-% % papersize = [30, 21]/5; 
-% % set (gcf, "papersize", papersize) 
-% % set (gcf, "paperposition", [0.25 0.25, papersize-0.5]) 
-% set(hgraph, "ydir", "normal");
+% Make the legend!
+handels   = [hmink, hadel, hfk(1), hfk(2)];
+strindels = {'Optimal \kappa', '\kappa(a_\delta)', ...
+	     sprintf('a = %1.1f', fixa(1)), sprintf('a = %1.1f', fixa(2))};
+[hleg, htext, hline] = my_legend(handels, strindels, 'northwest');
 
-% % Plot the "optimal a"
-% haopt = plot(deltas, aopt, 'x',
-% 	     'markersize', 7, 'color', 'k', 'linewidth', 8);
+% Font stuff
+FN = findall(h, '-property', 'FontName');
+set(FN, 'FontName', my_font);
+FS = findall(h, '-property', 'FontSize');
+set(FS, 'FontSize', 16);
 
-% % Make the legend!
-% [hleg, htext, hline] = my_legend(haopt, 'a_{\delta}', 'northeast', wpos);
-
-% % Font stuff
-% FN = findall(h, '-property', 'FontName');
-% set(FN, 'FontName', my_font);
-% FS = findall(h, '-property', 'FontSize');
-% set(FS, 'FontSize', 16);
-
-% % Make a png!
-% %print(h, '-color', figfil);
+% Make a png!
+print(h, '-color', figfil);

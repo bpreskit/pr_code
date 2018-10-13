@@ -1,4 +1,4 @@
-% exptable.m
+% flattable.m
 % Author: Brian Preskitt (2018)
 %
 % This file produces the figure displayed in xxxx of my dissertation.
@@ -8,43 +8,63 @@ close all
 graphics_toolkit('gnuplot');
 
 % Set some constants
-Na = 50;
+Na = 64;
 del0 = 2;
-Ndel = 15;
-d = 32;
+Ndel = 64;
+deltas = del0 : del0 + Ndel - 1;
+amin = 0.1;
+amax = 4;
+% d = 32;
+C = 0.2172336 * 2;
 results = zeros(Na, Ndel);
 my_font = '/usr/share/fonts/truetype/dejavu/DejaVuSerifCondensed.ttf';
 figdir = '~/ucsd/dissertation/dissertation/sections/meas/figs/';
 %figdir = strcat(pwd, '/');
-figfil = strcat(figdir, sprintf('exptable%d.pdf', d));
+%figfil = strcat(figdir, sprintf('flatable%d.pdf', d));
+figfil = strcat(figdir, 'flattable.pdf');
 
 % Indices used for for loop
 ii = 0;
 jj = 0;
 % For each a under test and delta, record conditioning.
-for a = linspace(1.001, 2, 128)
+for aodel = linspace(amin, amax, Na)
   ii++;
   jj = 0;
-  for delta = del0 : del0 + Ndel - 1
+  for delta = deltas
     jj++;
-    results(ii, jj) = expcond(a, d, delta);
-    bnd_results(ii, jj) = expbound(delta);
+    results(ii, jj) = flatcond(aodel * delta, 6 * delta - 1, delta);
   end
 end
 
+% Find best choice of a
+Naopt = 64;
+aomin = 0.1; aomax = 0.8;
+ii = 0;
+ores = zeros(Naopt, Ndel);
+for aodel = linspace(aomin, aomax, Naopt)
+  ii++;
+  jj = 0;
+  for delta = deltas
+    jj++;
+    ores(ii, jj) = flatcond(aodel * delta, 6 * delta - 1, delta);
+  end
+end
+
+aopt = linspace(aomin, aomax, Naopt)(argmin(ores, 1));
+
 % Calculate the "recommended a" for our conditioning bound.
-aopt = [(1 + sqrt(5)) / 2 * ones(4, 1); sqrt(1 + 4 ./ ((6 : Ndel + 1) - 2))'];
-deltas = del0 : del0 + Ndel - 1;
+aodel_thm = (2 * deltas - 1) ./ deltas;
+aodel_imp = C * ones(1, Ndel);
 
 % The rest of this is just setting up the image.
 % Produce fundamental image
 h = figure(1);
-himage = imagesc(deltas, linspace(1.001, 2, 128), log10(results));
+himage = imagesc(deltas, linspace(amin, amax, Na), log10(results));
 hgraph = get(himage).parent;
 hold on;
-axis([1.5  (Ndel + 1.5) 1 2]);
+axis([del0-0.5  (Ndel + del0 - 0.5) amin amax]);
 xlabel('Support size, \delta');
-ylabel('Exponential constant, a');
+ylabel('Ratio a / \delta');
 %title('log \kappa over a and \delta');
 
 % Funny resize operation that helps position the legend correctly
@@ -53,7 +73,7 @@ set(hgraph, "position", [0 0 1 1]);
 set(hgraph, "position", wpos);
 
 % Set the size of the figure, for printing.
-scale = 1.2;
+% scale = 1.2;
 % W = 4 * scale;
 % H = 3 * scale;
 % W = 8.5;
@@ -69,11 +89,18 @@ scale = 1.2;
 set(hgraph, "ydir", "normal");
 
 % Plot the "optimal a"
-haopt = plot(deltas, aopt, 'x',
-	     'markersize', 7, 'color', 'k', 'linewidth', 8);
+% hathm = plot(deltas, aodel_thm, 'x',
+% 	     'markersize', 7, 'color', 'k', 'linewidth', 8);
+% haimp = plot(deltas, aodel_imp, 'o',
+% 	     'markersize', 7, 'color', 'k', 'linewidth', 8);
+hathm = plot(deltas, aodel_thm, 'k--', 'linewidth', 8);
+haimp = plot(deltas, aodel_imp, 'k-.', 'linewidth', 8);
+haopt = plot(deltas(4 : 5 : end), aopt(4 : 5 : end), 'kx', 'linewidth', 8);
 
 % Make the legend and colorbar!
-[hleg, htext, hline] = my_legend(haopt, 'a_{\delta}', 'northeast',
+handels = [hathm, haimp, haopt];
+strindels = {'a = 2 \delta - 1', 'a = 2 C \delta', 'Optimal a'};
+[hleg, htext, hline] = my_legend(handels, strindels, 'northwest',
 				 'colorbar');
 hcol = colorbar(hgraph);
 set(hcol, "ytick", [0 1 2 3 4]);
