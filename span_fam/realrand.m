@@ -17,6 +17,7 @@ my_font = '/usr/share/fonts/truetype/dejavu/DejaVuSerifCondensed.ttf';
 figdir = '~/ucsd/dissertation/dissertation/sections/meas/figs/';
 %figdir = strcat(pwd, '/');
 figfil = strcat(figdir, sprintf('realrand.pdf', d, delta));
+Fd = dftmtx(d) / sqrt(d);
 
 % Set up the measurement systems and evaluate expected variance
 % Exponential masks

@@ -25,17 +25,16 @@ function [tx, hz] = angsync(data)
     W = data.W;
 
     % Hermitify X and W, just to be safe.  Make sure W is an adjacency matrix.
-    X = (X + X') / 2;
+    X = sign((X + X') / 2);
     W = (W + W') / 2;
     if !all(diag(W) == zeros(d, 1))
       W = W - diag(diag(W));
     end
 
-				% Set up the Laplacian
+    % Set up the Laplacian
     d = size(W, 1);
     assert(all(size(X) == d), 'X and W should be square, same shape.');
     assert(all(W(:) >= 0) & all(isreal(W(:))), 'W should be nonneg real.');
-    assert(all(abs(X(W > 0))(:) == 1), 'X should be 0 or unit modulus');
     D = diag(W * ones(d, 1));
     L = D - X .* W;
   else
@@ -52,23 +51,7 @@ function [tx, hz] = angsync(data)
     L = D - X;
   end
 
-  if strcmp(method, 'eig')
-    [hz, ~] = eigs(L, 1, 'sm');
-    tx = sign(hz);
-    return
-  elseif strcmp(method, 'sdpcpx')
-    b = ones(d, 1);
-    c = vec(L);
-    At = sparse([(1 : d) * (d + 1) - d]', [1:d]', ones(d, 1));
-    K = struct();
-    K.s = [d];
-    K.scomplex = 1;
-    K.xcomplex = 1 : d^2;
-
-    [hz, y, info] = sedumi(At, b, c, K);
-    [tx, ~] = eigs(reshape(hz, [d, d]), 1);
-    tx = sign(tx);
-  else
+  if strcmp(method, 'sdp')
     c = vec(realify(L, 0));
     b = [ones(2 * d, 1); zeros(d, 1)];
     A = sparse([1:2*d]', [(1 : 2*d) * (2*d + 1) - 2*d]', ones(2*d, 1));
@@ -83,4 +66,54 @@ function [tx, hz] = angsync(data)
     [hz, y, info] = sedumi(A, b, c, K, pars);
     [tx, ~] = eigs(complexify(reshape(hz, [2*d, 2*d])), 1);
     tx = sign(tx);
+  elseif strcmp(method, 'sdpcpx')
+    b = ones(d, 1);
+    c = vec(L);
+    At = sparse([(1 : d) * (d + 1) - d]', [1:d]', ones(d, 1));
+    K = struct();
+    K.s = [d];
+    K.scomplex = 1;
+    K.xcomplex = 1 : d^2;
+
+    [hz, y, info] = sedumi(At, b, c, K);
+    [tx, ~] = eigs(reshape(hz, [d, d]), 1);
+    tx = sign(tx);
+  elseif strcmp(method, 'tree')
+    X = sign(X);
+
+    adj = cell();
+    verts = (1 : d)';
+    deg = zeros(d, 1);
+    for i = 1 : d
+      adj{i} = verts(logical(X(:, i)));
+      deg(i) = numel(adj{i});
+    end
+    
+    tx = zeros(d, 1);
+    if !isfield(data, 'root')
+      r = randi(d);
+    else
+      r = data.root;
+    end
+    tx(r) = 1;
+    q = javaObject('java.util.LinkedList');
+    q.add(r);
+    while q.peek()
+      u = q.remove();
+      for i = 1 : deg(u)
+	v = adj{u}(i);
+	if !tx(v)
+	  tx(v) = tx(u) * X(v, u);
+	  q.add(v);
+	end
+      end
+    end
+    hz = tx;
+  elseif strcmp(method, 'randtree')
+    [~,~,tx] = randtree(X, 1);
+    hz = tx;
+  else
+    [hz, ~] = eigs(L, 1, 'sm');
+    tx = sign(hz);
+    return
   end

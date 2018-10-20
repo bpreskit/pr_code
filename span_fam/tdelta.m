@@ -6,6 +6,9 @@ function TdA = tdelta(A, delta, s)
   if ~exist('s')
     s = 1;
   end
+  if numel(A) == 1
+    A = ones(A);    
+  end
 
   d = size(A, 1);
   assert(all(size(A) == d), 'A should be square');
@@ -16,7 +19,7 @@ function TdA = tdelta(A, delta, s)
     TdA = diag2tdelt(tdelt2diag(A, delta), d, delta);
     return
   else
-    TdA = zeros(d);
+    TdA = sparse(d, d);
     for l = 0 : dbar - 1
       inds = mod((l * s) + (1 : delta) - 1, d) + 1;
       TdA(inds, inds) = A(inds, inds);
