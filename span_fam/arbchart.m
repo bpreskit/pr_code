@@ -11,7 +11,7 @@ d = 64;
 delta = 16;
 D = 2 * delta - 1;
 C = 0.2172336 * 2;
-Nt = 1024;
+Nt = 4;
 my_font = '/usr/share/fonts/truetype/dejavu/DejaVuSerifCondensed.ttf';
 figdir = '~/ucsd/dissertation/dissertation/sections/meas/figs/';
 figdir = strcat(pwd, '/');
@@ -48,9 +48,9 @@ xlabel(hax, '\kappa (log scale)');
 ylabel(hax, 'Fraction of results in bin');
 sqx = [mean(get(hax).xlim), mean(get(hax).ylim)];
 hgenleg = plot(sqx(1), sqx(2), 's', 'markerfacecolor', gencolor, ...
-	       'markeredgecolor', gencolor);
+         'markeredgecolor', gencolor);
 hgamleg = plot(sqx(1), sqx(2), 's', 'markerfacecolor', gamcolor, ...
-	       'markeredgecolor', gamcolor);
+         'markeredgecolor', gamcolor);
 
 % Add flat and exponential for reference
 kexp = expcond(sqrt(1 + 4 / (delta - 2)), d, delta);
@@ -62,7 +62,7 @@ msref = 6;
 hexp = plot(log10(kexp), yref, 'kx', 'linewidth', lwref, 'markersize', msref);
 hflt = plot(log10(kflt), yref, 'ko', 'linewidth', lwref, 'markersize', msref);
 hspr = plot(log10(arbcond(sparsemasks(d, delta), d, delta)), ...
-	    yref, 'ks', 'linewidth', lwref, 'markersize', msref);
+      yref, 'ks', 'linewidth', lwref, 'markersize', msref);
 
 xmin = floor(log10(kflt) * 2) / 2;
 xmin = min(xmin, get(hax).xlim(1));

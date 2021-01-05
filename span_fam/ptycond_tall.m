@@ -1,5 +1,5 @@
-function kappa = ptycond(masks, d, delta, s)
-  % kappa = ptycond(masks, d, delta, s)
+function kappa = ptycond_tall(masks, d, delta, s)
+  % kappa = ptycond_tall(masks, d, delta, s)
   %
   % Calculates the condition number of the ptychographic measurement
   % system with the given data:
@@ -20,7 +20,7 @@ function kappa = ptycond(masks, d, delta, s)
 
   D = size(masks, 2);
   alpha = s * (2 * delta - s);
-  assert(D == alpha, 'Wrong no. of masks!');
+  assert(D >= alpha, 'Wrong no. of masks!');
   dbar = d / s;
   assert(dbar == floor(dbar), 's should divide d');
 
@@ -53,7 +53,7 @@ function kappa = ptycond(masks, d, delta, s)
   smin = zeros(dbar, 1);
 
   for k = 1 : dbar
-    Mk = zeros(D);
+    Mk = zeros(D, alpha);
     inds = 0;
     for m = 1 - delta : delta - 1
       width = min(delta - abs(m), s);
@@ -64,7 +64,7 @@ function kappa = ptycond(masks, d, delta, s)
     end
     r = rank(Mk);
     errmsg = sprintf('Singular Mk! (k, r) = (%d, %d)', k, r);
-    assert(r == D, errmsg);
+    assert(r == alpha, errmsg);
     smax(k) = sqrt(eigs(Mk' * Mk, 1));
     smin(k) = sqrt(eigs(Mk' * Mk, 1, 'sm'));
   end

@@ -1,5 +1,6 @@
-% pty_arbchart
-% Author: Brian Preskitt (2018)
+% prbr_pty_study.m
+% Author: Brian Preskitt (2020)
+% Adapted from pty_arbchart.m
 %
 % This file produces the figure displayed in xxxx of my dissertation.
 
@@ -14,13 +15,17 @@ delta = 13;
 ss = [1 2 6 12];
 Ns = numel(ss);
 D = 2 * delta - 1;
-Nt = 1024;
+Nt = 1;
 colors = {[239 135 6]/255, [115 24 156]/255, ...
        [53 154 188]/255, [233 203 0]/255, [29 194 88]/255};
 my_font = '/usr/share/fonts/truetype/dejavu/DejaVuSerifCondensed.ttf';
 figdir = '~/ucsd/dissertation/dissertation/sections/ptychography/figs/';
 %figdir = strcat(pwd, '/');
 figfil = strcat(figdir, 'pty_arbchart.pdf');
+
+% Some constants
+opt_decay = 1 + 4 / (delta - 2);
+%% opt_decay = 1.6;
 
 % dew it
 kappa = zeros(Nt, Ns);
@@ -31,9 +36,39 @@ for si = 1 : Ns
   alpha = s * (2 * delta - s);
   tic;
   for i = 1 : Nt
-    masks = (randn(delta, alpha) + randn(delta, alpha) * sqrt(-1)) / 2;
-    kappa(i, si) = ptycond(masks, d, delta, s);
+    num_blocks = ceil(alpha / (2 * delta - 1));
+    if num_blocks > 1
+      num_blocks = num_blocks + 2 * s;
+    end
+    masks = zeros(delta, 0);
+
+    % decay_factors = linspace(1.05, opt_decay, num_blocks + 1);
+    % for decay = decay_factors(2:end)
+    %   masks = [masks, gammasks(decay.^(0:delta-1)', delta)];
+    % end
+
+    decay_factors = linspace(1, opt_decay, num_blocks + 1);
+    for decay = decay_factors(2:end)
+      decay = 1 / decay;
+      peak = randi(delta);
+      display(peak)
+      gam = decay.^abs((1:delta)' - peak);
+      masks = [masks, gammasks(gam, delta)];
+    end
+
+    % for k = 1 : num_blocks
+    %   K = (2 * delta - 1) + 3 * (k - 1);
+    %   masks = [masks, gammasks(randn(delta, 1), delta, K)];
+    % end
+    % for k = 1 : num_blocks
+    %   masks = [masks, gammasks(ones(delta, 1), delta)];
+    % end
+    % masks = masks .* randn(size(masks));
+
+    % masks = masks(:, 1:alpha);
+    kappa(i, si) = ptycond_tall(masks, d, delta, s);
   end
+  printf('yay it worked for s = %d\n', s);
   toc;
 end
 
