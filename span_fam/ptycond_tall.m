@@ -13,16 +13,16 @@ function kappa = ptycond_tall(masks, d, delta, s)
   warning('error', 'Octave:nearly-singular-matrix', 'local');
   warning('error', 'Octave:singular-matrix', 'local');
 
-  if s == 1
-    kappa = arbcond(masks, d, delta);
-    return
-  end
-
   D = size(masks, 2);
   alpha = s * (2 * delta - s);
   assert(D >= alpha, 'Wrong no. of masks!');
   dbar = d / s;
   assert(dbar == floor(dbar), 's should divide d');
+
+  if s == 1 && D == min(2 * delta - 1, d)
+    kappa = arbcond(masks, d, delta);
+    return
+  end
 
   Fdel = dftmtx(delta);
   Fs = cell(D, 2 * delta - 1);

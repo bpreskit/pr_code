@@ -1,0 +1,23 @@
+* How to use these experiments
+** Software requirements
+   The experiments were first conducted using [[https://www.gnu.org/software/octave/index][GNU Octave]], version 4.0.0, [[http://www.gnuplot.info/][Gnuplot]], version 4.6.7, and
+   the convex optimization problems were solved using [[https://github.com/sqlp/sedumi][SeDuMi]] version 1.32, running on Linux Mint
+   18.1. However, a few of them have been verified to continue running with Octave 4.2.2 and Gnuplot
+   5.2.2 on Mint 19.3.  Most likely, the latest releases of Octave and Gnuplot should suffice.
+
+   In the new version of octave, the authors note that the ~octave-communications~ package (version
+   1.2.1-5) was required on top of the base Octave distribution.
+** Exploring constructions for ptycographic sets of masks
+   In ~span_fam/prbr_pty_study.m~, we have a script that computes the condition numbers of the
+   linear operators associated with different constructions of mask collections.  As the computation
+   of Theorem 10 in [[https://github.com/bpreskit/dissertation/blob/master/preskitt_dissertation.pdf][my thesis]] (Theorem 3 in /Admissible Measurements and Robust Algorithms for
+   Ptychography/) admits over-determined linear systems, the current script employs them, as this
+   was discovered empirically to succeed with higher "shifts".
+
+   In the ~for~ loop beginning on line 30, we can see three constructions that are available for
+   testing; these also supply a template for how one might create further sets of masks to see their
+   condition numbers.
+
+   Since the mask constructions use some randomness, the output of this script is a histogram
+   describing the frequency of different condition numbers among the trials.  To control the number
+   of trials, one may edit the value of ~Nt~ specified in line 16.

@@ -1,8 +1,6 @@
 % prbr_pty_study.m
 % Author: Brian Preskitt (2020)
 % Adapted from pty_arbchart.m
-%
-% This file produces the figure displayed in xxxx of my dissertation.
 
 % General housekeepings
 close all
@@ -19,8 +17,8 @@ Nt = 1;
 colors = {[239 135 6]/255, [115 24 156]/255, ...
        [53 154 188]/255, [233 203 0]/255, [29 194 88]/255};
 my_font = '/usr/share/fonts/truetype/dejavu/DejaVuSerifCondensed.ttf';
-figdir = '~/ucsd/dissertation/dissertation/sections/ptychography/figs/';
-%figdir = strcat(pwd, '/');
+figdir = '/tmp/figs/';
+mkdir(figdir);
 figfil = strcat(figdir, 'pty_arbchart.pdf');
 
 % Some constants
@@ -37,25 +35,33 @@ for si = 1 : Ns
   tic;
   for i = 1 : Nt
     num_blocks = ceil(alpha / (2 * delta - 1));
-    if num_blocks > 1
-      num_blocks = num_blocks + 2 * s;
-    end
+    num_blocks = num_blocks + 2 * s;
     masks = zeros(delta, 0);
 
+    % Construction #1: the basic exponential mask
+    %
     % decay_factors = linspace(1.05, opt_decay, num_blocks + 1);
     % for decay = decay_factors(2:end)
     %   masks = [masks, gammasks(decay.^(0:delta-1)', delta)];
     % end
 
+    % Construction #2: exponential masks with random "peak" locations
+    %
     decay_factors = linspace(1, opt_decay, num_blocks + 1);
     for decay = decay_factors(2:end)
       decay = 1 / decay;
-      peak = randi(delta);
+      if size(masks, 2) != 0
+        peak = randi(delta);
+      else
+        peak = 1;
+      end
       display(peak)
       gam = decay.^abs((1:delta)' - peak);
       masks = [masks, gammasks(gam, delta)];
     end
 
+    % Construction #3: masks with real, Gaussian entries
+    %
     % for k = 1 : num_blocks
     %   K = (2 * delta - 1) + 3 * (k - 1);
     %   masks = [masks, gammasks(randn(delta, 1), delta, K)];
@@ -68,7 +74,7 @@ for si = 1 : Ns
     % masks = masks(:, 1:alpha);
     kappa(i, si) = ptycond_tall(masks, d, delta, s);
   end
-  printf('yay it worked for s = %d\n', s);
+  printf('The operator for s = %d was non-singular\n', s);
   toc;
 end
 
